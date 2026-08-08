@@ -1,44 +1,10 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { useAutoFile } from '@/hooks/use-auto-file';
 import {
   FileText,
-  Upload,
-  Sparkles,
-  Download,
-  RefreshCw,
-  CheckCircle2,
-  AlertCircle,
-  FileCheck,
-  ShieldCheck,
-  Zap,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { cn } from '@/lib/utils';
-
-export default function PdfCompressor() {
-  const [file, setFile] = useState<File | null>(null);
-  const [compressedPdfUrl, setCompressedPdfUrl] = useState<string | null>(null);
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [quality, setQuality] = useState<number>(0.6);
-  const [originalSize, setOriginalSize] = useState<number>(0);
-  const [compressedSize, setCompressedSize] = useState<number>(0);
-
-  // File handler callback
-  const handleFileSelect = useCallback((selectedFile: File) => {
-    if (selectedFile.type !== 'application/pdf') return;
-    setFile(selectedFile);
-    setOriginalSize(selectedFile.size);
-    setCompressedPdfUrl(null);
-  }, []);
-
-  // Auto-consume dropped file from homepage
-  useAutoFile(handleFileSelect);
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import {
   Upload,
   ZoomIn,
   ZoomOut,
@@ -48,6 +14,10 @@ import {
   ImageIcon,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
+  FileCheck,
+  ShieldCheck,
+  Zap,
   Crop,
   RotateCw,
   Lock,
@@ -281,6 +251,9 @@ export default function ImageResizer({
       setError('Could not generate a sample image.');
     }
   }, []);
+
+  // Auto-consume dropped file from homepage
+  useAutoFile(handleFile);
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
