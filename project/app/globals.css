@@ -1,0 +1,168 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* High-Contrast Light Theme */
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 94%;
+    --muted-foreground: 215 20% 40%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --border: 214 32% 85%;
+    --input: 214 32% 88%;
+    --ring: 217 91% 60%;
+    --radius: 0.85rem;
+  }
+
+  /* Rich Dark Theme */
+  .dark {
+    --background: 222 47% 7%;
+    --foreground: 0 0% 98%;
+    --card: 222 30% 11%;
+    --card-foreground: 0 0% 98%;
+    --popover: 222 30% 11%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 222 24% 14%;
+    --muted-foreground: 215 16% 55%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --border: 222 20% 20%;
+    --input: 222 20% 20%;
+    --ring: 217 91% 60%;
+  }
+
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .dark .glass-panel {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .specular-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 25px -3px rgba(0, 0, 0, 0.08);
+  }
+  
+  .dark .specular-card {
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 12px 32px -8px rgba(0, 0, 0, 0.4);
+  }
+
+  .bg-dock {
+    @apply bg-background;
+  }
+  .bg-dock-surface {
+    @apply bg-card/60 backdrop-blur-md;
+  }
+  .bg-dock-card {
+    @apply bg-card/60 backdrop-blur-md;
+  }
+  .text-dock-muted {
+    @apply text-muted-foreground;
+  }
+  .border-dock {
+    @apply border-border;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.25);
+    border-radius: 9999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.squircle-glow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.squircle-glow:hover {
+  transform: scale(1.08) rotate(-2deg);
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.btn-primary-glow {
+  @apply bg-primary text-primary-foreground transition-all duration-300;
+  box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.35);
+}
+.btn-primary-glow:hover {
+  @apply opacity-90;
+  box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.5);
+  transform: translateY(-2px) scale(1.02);
+}
+.btn-primary-glow:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.card-dock {
+  @apply border border-border bg-card/60 backdrop-blur-md transition-all duration-300;
+}
+.card-dock:hover {
+  border-color: hsl(var(--primary) / 0.4);
+  box-shadow: 0 12px 30px -8px hsl(var(--primary) / 0.25);
+  transform: translateY(-3px) scale(1.01);
+}
+
+.search-glow:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.5), 0 0 20px -4px hsl(var(--primary) / 0.3);
+}
