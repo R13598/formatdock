@@ -20,9 +20,25 @@ export const metadata = {
   },
 };
 
-export default function ToolsPage() {
+export default function ToolsPage({
+  searchParams,
+}: {
+  searchParams?: { cat?: string };
+}) {
+  const catFilter = searchParams?.cat?.toLowerCase();
+
+  const filteredGroups = toolGroups.filter((group) => {
+    if (!catFilter) return true;
+    if (catFilter === 'creator') return group === 'Creator Studio';
+    if (catFilter === 'dev') return group === 'Image & Dev Utilities';
+    if (catFilter === 'exams') return group === 'Exam Photo Tools';
+    if (catFilter === 'documents') return group === 'Document Utilities';
+    if (catFilter === 'calculators') return group === 'Calculators';
+    return group.toLowerCase().includes(catFilter);
+  });
+
   return (
-    <div className="flex min-h-screen flex-col bg-dock">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <SiteHeader />
       <TrustBadgeBar />
       <main className="flex-1">
@@ -32,7 +48,7 @@ export default function ToolsPage() {
             <div className="flex items-center gap-2 text-primary">
               <Search className="h-5 w-5" />
               <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
-                All Tools
+                {catFilter ? `Tools — ${catFilter.toUpperCase()}` : 'All Tools'}
               </h1>
             </div>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
@@ -47,7 +63,7 @@ export default function ToolsPage() {
         </section>
 
         <div className="mx-auto max-w-7xl space-y-12 px-4 py-12 sm:px-6 lg:px-8">
-          {toolGroups.map((group) => {
+          {filteredGroups.map((group) => {
             const groupTools = tools.filter((t) => t.group === group);
             return (
               <section key={group}>

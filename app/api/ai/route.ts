@@ -21,7 +21,59 @@ interface ProviderResult {
   provider: string;
 }
 
-// ─── Tier 1: Google Gemini ─────────────────────────────────────────────────
+// ─── Helper: Fetch with Timeout ──────────────────────────────────────────────
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 12000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+// ─── Tier 1: Groq (Llama 3.3 70B - Fast & High Rate Limits) ──────────────────
+
+async function callGroq(body: AIRequestBody): Promise<ProviderResult> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('Groq key not configured');
+
+  const sys = body.system ?? 'You are a helpful AI assistant.';
+  const res = await fetchWithTimeout(
+    'https://api.groq.com/openai/v1/chat/completions',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: sys },
+          { role: 'user', content: body.prompt },
+        ],
+        temperature: body.temperature ?? 0.7,
+        max_tokens: body.maxTokens ?? 1024,
+      }),
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Groq ${res.status}: ${errText.slice(0, 200)}`);
+  }
+
+  const json = await res.json();
+  const text = json.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Groq returned empty response');
+  return { text: text.trim(), provider: 'Groq (Llama 3.3 70B)' };
+}
+
+// ─── Tier 2: Google Gemini ─────────────────────────────────────────────────
 
 async function callGemini(body: AIRequestBody): Promise<ProviderResult> {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -32,7 +84,7 @@ async function callGemini(body: AIRequestBody): Promise<ProviderResult> {
     { role: 'user', parts: [{ text: `${sys}\n\n${body.prompt}` }] },
   ];
 
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
     {
       method: 'POST',
@@ -44,8 +96,8 @@ async function callGemini(body: AIRequestBody): Promise<ProviderResult> {
           maxOutputTokens: body.maxTokens ?? 1024,
         },
       }),
-      signal: AbortSignal.timeout(15000),
-    }
+    },
+    15000
   );
 
   if (!res.ok) {
@@ -56,46 +108,10 @@ async function callGemini(body: AIRequestBody): Promise<ProviderResult> {
   const json = await res.json();
   const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('Gemini returned empty response');
-  return { text: text.trim(), provider: 'Gemini' };
+  return { text: text.trim(), provider: 'Gemini 2.0 Flash' };
 }
 
-// ─── Tier 2: Groq (Llama 3.3) ──────────────────────────────────────────────
-
-async function callGroq(body: AIRequestBody): Promise<ProviderResult> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error('Groq key not configured');
-
-  const sys = body.system ?? 'You are a helpful AI assistant.';
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: sys },
-        { role: 'user', content: body.prompt },
-      ],
-      temperature: body.temperature ?? 0.7,
-      max_tokens: body.maxTokens ?? 1024,
-    }),
-    signal: AbortSignal.timeout(15000),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '');
-    throw new Error(`Groq ${res.status}: ${errText.slice(0, 200)}`);
-  }
-
-  const json = await res.json();
-  const text = json.choices?.[0]?.message?.content;
-  if (!text) throw new Error('Groq returned empty response');
-  return { text: text.trim(), provider: 'Groq (Llama 3.3)' };
-}
-
-// ─── Tier 3: HuggingFace Inference API ─────────────────────────────────────
+// ─── Tier 3: HuggingFace Inference ─────────────────────────────────────────
 
 async function callHuggingFace(body: AIRequestBody): Promise<ProviderResult> {
   const apiKey = process.env.HUGGINGFACE_API_KEY;
@@ -104,8 +120,8 @@ async function callHuggingFace(body: AIRequestBody): Promise<ProviderResult> {
   const sys = body.system ?? 'You are a helpful AI assistant.';
   const inputs = `${sys}\n\nUser: ${body.prompt}\n\nAssistant:`;
 
-  const res = await fetch(
-    'https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct',
+  const res = await fetchWithTimeout(
+    'https://router.huggingface.co/hf-inference/models/meta-llama/Meta-Llama-3-8B-Instruct',
     {
       method: 'POST',
       headers: {
@@ -120,8 +136,8 @@ async function callHuggingFace(body: AIRequestBody): Promise<ProviderResult> {
           return_full_text: false,
         },
       }),
-      signal: AbortSignal.timeout(20000),
-    }
+    },
+    15000
   );
 
   if (!res.ok) {
@@ -130,7 +146,7 @@ async function callHuggingFace(body: AIRequestBody): Promise<ProviderResult> {
   }
 
   const json = await res.json();
-  const text = Array.isArray(json) ? json[0]?.generated_text : json.generated_text;
+  const text = Array.isArray(json) ? json[0]?.generated_text : json?.generated_text;
   if (!text) throw new Error('HuggingFace returned empty response');
   return { text: text.trim(), provider: 'HuggingFace' };
 }
@@ -138,8 +154,8 @@ async function callHuggingFace(body: AIRequestBody): Promise<ProviderResult> {
 // ─── Route Handler ──────────────────────────────────────────────────────────
 
 const PROVIDERS: Array<{ name: string; fn: (b: AIRequestBody) => Promise<ProviderResult> }> = [
-  { name: 'Gemini', fn: callGemini },
   { name: 'Groq', fn: callGroq },
+  { name: 'Gemini', fn: callGemini },
   { name: 'HuggingFace', fn: callHuggingFace },
 ];
 

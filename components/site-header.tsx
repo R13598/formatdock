@@ -24,8 +24,8 @@ const categoryTabs = [
   { href: '/exams', label: 'Exam Presets', icon: '🎓' },
   { href: '/documents', label: 'PDF & Docs', icon: '📄' },
   { href: '/calculators', label: 'Calculators', icon: '🧮' },
-  { href: '/tools?cat=creator', label: 'Creator Studio', icon: '🎨' },
-  { href: '/tools?cat=dev', label: 'Image & Dev', icon: '🛠️' },
+  { href: '/creator', label: 'Creator Studio', icon: '🎨' },
+  { href: '/dev', label: 'Image & Dev', icon: '🛠️' },
   { href: '/stock-videos', label: 'Stock Media', icon: '🎬' },
   { href: '/wallpapers', label: 'Wallpapers', icon: '🖼️' },
 ];
